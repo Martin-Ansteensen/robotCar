@@ -14,6 +14,14 @@ struct Data_Package {
   byte j2PotX;
   byte j2PotY;
   byte j2Button;
+  byte up;
+  byte down;
+  byte left;
+  byte right;
+  byte pot1;
+  byte pot2;
+  byte switch1;
+  byte switch2;
 };
 Data_Package data; //Create a variable with the above structure
 
@@ -40,25 +48,45 @@ void recieveData() {
     resetData(); // If connection is lost, reset the data. It prevents unwanted behavior, for example if a drone has a throttle up and we lose connection, it can keep flying unless we reset the values
   }
   // Print the data in the Serial Monitor
-  Serial.print("j1PotX: ");
-  Serial.print(data.j1PotX);
-  Serial.print("; j1PotY: ");
-  Serial.print(data.j1PotY);
-  Serial.print("; j1Button: ");
-  Serial.print(data.j1Button);
-  
-  Serial.print("; j2PotX: ");
-  Serial.print(data.j2PotX); 
-  Serial.print("; j2PotY: ");
-  Serial.print(data.j2PotY);
-  Serial.print("; j2Button: ");
-  Serial.println(data.j2Button);
+//  Serial.print("j1PotX: ");
+//  Serial.print(data.j1PotX);
+//  Serial.print("; j1PotY: ");
+//  Serial.print(data.j1PotY);
+//  Serial.print("; j1Button: ");
+//  Serial.print(data.j1Button);
+//  
+//  Serial.print("; j2PotX: ");
+//  Serial.print(data.j2PotX); 
+//  Serial.print("; j2PotY: ");
+//  Serial.print(data.j2PotY);
+//  Serial.print("; j2Button: ");
+//  Serial.println(data.j2Button);
 }
+
+void radioControl(){
+  data.j1PotX = map(data.j1PotX, 0, 255, -1, 1);
+  data.j1PotY = map(data.j1PotY, 0, 255, -1, 1);
+  int driveAngel = round(atan2(data.j1PotX, data.j1PotY)*57.295779);
+  int magnitude = data.j1PotX/sin(atan2(data.j1PotX, data.j1PotY));
+  magnitude = map(magnitude, 0, 1.42, 0, 75)
+  driveMeccanumGyroWithDistance(driveangel, magnitude);  
+}
+
+
+
 void resetData() {
-  data.j1PotX = 127;
-  data.j1PotY = 127;
+  data.j1PotX = 126;
+  data.j1PotY = 128;
   data.j2PotX = 127;
-  data.j2PotY = 127;
+  data.j2PotY = 130;
   data.j1Button = 1;
   data.j2Button = 1;
+  data.up = 1;
+  data.down = 1;
+  data.left = 1;
+  data.right = 1;
+  data.pot1 = 1;
+  data.pot2 = 1;
+  data.switch1 = 1;
+  data.switch2 = 1;
 }

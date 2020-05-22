@@ -85,6 +85,8 @@ void gyroSetup() {
   Serial.println("Gyro-setup finished");
 }
 
+
+// Return rotation (only one angel)
 void getRotation(){
   if (!dmpReady) return;
   // wait for MPU interrupt or extra packet(s) available
@@ -130,6 +132,8 @@ void getRotation(){
     //return(rotation180, rotation360);
   }
 }
+
+
 
 
 
