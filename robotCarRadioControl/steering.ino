@@ -91,76 +91,17 @@ void runPID(){
 }
 
 // Motorspeed is 60 and something, this is not mapped yet. Should map input from 0-100 to motor values
-void driveMeccanumGyroWithDistance(int angle, float mSpeed, int distance){
-  getRotation();
-  delay(1000);
-  followAngel180 = rotation180;
-  //followAngel360 = rotation360; 
-  
-  //mSpeed = map(mSpeed, 0, 100, 60, 100);
-  
-  int counter = 0;
-  while(counter < distance){
-    runPID();
-    getRotation();
-    robotAngel180 = rotation180;
-    //robotAngel360 = rotation360; 
-     
-    //error = abs(followAngel180)+(robotAngel180); ikke bruk
-    calculateSpeed(mSpeed, angle, cPID);
-
-    // Scale the speeds in case one of them exceeds the motors limits
-    double largest = abs(calculatedSpeed[0]);
-    for (int i = 1; i < 4; i++){
-      if (abs(calculatedSpeed[i]) > largest){
-        largest = abs(calculatedSpeed[i]);
-      }
-    }
-    // Only scale speeds if the largest "speed" exceeds limits
-    if (largest > 100.0){
-//      Serial.println("Scaling down motor speeds");
-      for (int i = 0; i < 4; i++){
-        calculatedSpeed[i] = calculatedSpeed[i] / largest; 
-      }
-    }
-    
-    motorDirection();
-    analogWrite(enAL, abs(calculatedSpeed[0]));
-    analogWrite(enAR, abs(calculatedSpeed[1]));
-    analogWrite(enBL, abs(calculatedSpeed[2]));
-    analogWrite(enBR, abs(calculatedSpeed[3]));
-
-//    Serial.print(" | motor1  = "); Serial.print(calculatedSpeed[0]);
-//    Serial.print(" | motor2  = "); Serial.print(calculatedSpeed[1]);
-//    Serial.print(" | motor3  = "); Serial.print(calculatedSpeed[2]);
-//    Serial.print(" | motor4  = "); Serial.print(calculatedSpeed[3]);
-//    Serial.print(" | error  = "); Serial.print(error);
-//    Serial.print(" | robot angel180  = "); Serial.print(robotAngel180);
-//    Serial.print(" | robot angel360  = "); Serial.print(robotAngel360);
-//    Serial.print(" | follow angel 360 = "); Serial.print(followAngel360);
-//    Serial.print(" | follow angel 180 = "); Serial.print(followAngel180);
-//    Serial.print(" | cPID = "); Serial.print(cPID);
-//    Serial.println("");  
-    counter++;
-  }
-  DisableAll();
-}
-
-// Motorspeed is 60 and something, this is not mapped yet. Should map input from 0-100 to motor values
 void driveMeccanumGyroWithRadio(int angle, float mSpeed){
+  Serial.print(angle);
+  Serial.print(" , ");
+  Serial.println(mSpeed);
   getRotation();
-  delay(1000);
-  followAngel180 = rotation180;
-  
-  //mSpeed = map(mSpeed, 0, 100, 60, 100);
-  
-  int counter = 0;
-  while(counter < distance){
-    runPID();
-    getRotation();
-    robotAngel180 = rotation180;
+  followAngel180 = 0;//rotation180;
+  robotAngel180 = rotation180;
     
-    calculateSpeed(mSpeed, angle, cPID);
+    runPID();
+
+    calculateSpeed(mSpeed, angle, 0);//cPID);
 
     // Scale the speeds in case one of them exceeds the motors limits
     double largest = abs(calculatedSpeed[0]);
@@ -178,26 +119,24 @@ void driveMeccanumGyroWithRadio(int angle, float mSpeed){
     }
     
     motorDirection();
-    analogWrite(enAL, abs(calculatedSpeed[0]));
-    analogWrite(enAR, abs(calculatedSpeed[1]));
-    analogWrite(enBL, abs(calculatedSpeed[2]));
-    analogWrite(enBR, abs(calculatedSpeed[3]));
-
-//    Serial.print(" | motor1  = "); Serial.print(calculatedSpeed[0]);
-//    Serial.print(" | motor2  = "); Serial.print(calculatedSpeed[1]);
-//    Serial.print(" | motor3  = "); Serial.print(calculatedSpeed[2]);
-//    Serial.print(" | motor4  = "); Serial.print(calculatedSpeed[3]);
-//    Serial.print(" | error  = "); Serial.print(error);
-//    Serial.print(" | robot angel180  = "); Serial.print(robotAngel180);
-//    Serial.print(" | robot angel360  = "); Serial.print(robotAngel360);
-//    Serial.print(" | follow angel 360 = "); Serial.print(followAngel360);
-//    Serial.print(" | follow angel 180 = "); Serial.print(followAngel180);
-//    Serial.print(" | cPID = "); Serial.print(cPID);
-//    Serial.println("");  
-    counter++;
-  }
-  DisableAll();
-}
+//    analogWrite(enAL, abs(calculatedSpeed[0]));
+//    analogWrite(enAR, abs(calculatedSpeed[1]));
+//    analogWrite(enBL, abs(calculatedSpeed[2]));
+//    analogWrite(enBR, abs(calculatedSpeed[3]));
+/*
+    Serial.print(" | motor1  = "); Serial.print(calculatedSpeed[0]);
+    Serial.print(" | motor2  = "); Serial.print(calculatedSpeed[1]);
+    Serial.print(" | motor3  = "); Serial.print(calculatedSpeed[2]);
+    Serial.print(" | motor4  = "); Serial.print(calculatedSpeed[3]);
+    Serial.print(" | error  = "); Serial.print(error);
+      //Serial.print(" | robot angel180  = "); Serial.print(robotAngel180);
+    //Serial.print(" | robot angel360  = "); Serial.print(robotAngel360);
+    Serial.print(" | follow angel 360 = "); Serial.print(followAngel360);
+      //Serial.print(" | follow angel 180 = "); Serial.print(followAngel180);
+      //Serial.print(" | cPID = "); Serial.print(cPID);
+    Serial.println("");  
+*/
+ }
 
 
 void motorDirection(){

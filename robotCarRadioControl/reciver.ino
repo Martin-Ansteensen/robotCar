@@ -53,7 +53,7 @@ void recieveData() {
 //  Serial.print("; j1PotY: ");
 //  Serial.print(data.j1PotY);
 //  Serial.print("; j1Button: ");
-//  Serial.print(data.j1Button);
+//  Serial.println(data.j1Button);
 //  
 //  Serial.print("; j2PotX: ");
 //  Serial.print(data.j2PotX); 
@@ -64,21 +64,21 @@ void recieveData() {
 }
 
 void radioControl(){
-  data.j1PotX = map(data.j1PotX, 0, 255, -1, 1);
-  data.j1PotY = map(data.j1PotY, 0, 255, -1, 1);
-  int driveAngel = round(atan2(data.j1PotX, data.j1PotY)*57.295779);
-  int magnitude = data.j1PotX/sin(atan2(data.j1PotX, data.j1PotY));
-  magnitude = map(magnitude, 0, 1.42, 0, 75)
-  driveMeccanumGyroWithDistance(driveangel, magnitude);  
+  int j1PotX = map(data.j2PotX, 0, 255, -1, 1);
+  int j1PotY = map(data.j2PotY, 0, 255, -1, 1);
+  int driveAngel = round(atan2(j1PotX, j1PotY)*57.295779);
+  int magnitude = j1PotX/sin(atan2(j1PotX, j1PotY));
+  magnitude = map(magnitude, 0, 1.42, 0, 80);
+  driveMeccanumGyroWithRadio(driveAngel, magnitude);  
 }
 
 
 
 void resetData() {
-  data.j1PotX = 126;
-  data.j1PotY = 128;
+  data.j1PotX = 127;
+  data.j1PotY = 127;
   data.j2PotX = 127;
-  data.j2PotY = 130;
+  data.j2PotY = 127;
   data.j1Button = 1;
   data.j2Button = 1;
   data.up = 1;
