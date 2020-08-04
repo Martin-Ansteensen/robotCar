@@ -1,7 +1,7 @@
+
 /*  
   Made for arduino mega
 */
-
 
 void setup(){
 
@@ -15,7 +15,9 @@ void setup(){
 }
  
 void loop(){
-  recieveData(); 
+  recieveData();
+  calculateFromRadio();
   radioControl();
-  
+  //driveMeccanumGyro(0, 75);
+  //driveMeccanum(0, 200, 10000);
 }

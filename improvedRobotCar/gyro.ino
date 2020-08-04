@@ -25,7 +25,8 @@ float ypr[3]; // [yaw, pitch, roll] yaw/pitch/roll container and gravity vector
 float rotation, roll, tilt, forwardAcceleration, sideAcceleration, fallAcceleration; 
 float rotationOffset;
 
-float rotation180, rotation360;
+float robotAngelScale180; // Goes from -PI, 0, PI (in degrees: -180, 0, 180)
+float robotAngelScale360; // Goes from 0, 2PI (in degrees: 0, 360)
 
 volatile bool mpuInterrupt = false; // indicates whether MPU interrupt pin has gone high
 
@@ -48,12 +49,12 @@ void gyroSetup() {
   devStatus = mpu.dmpInitialize();
   
   // supply your own gyro offsets here, scaled for min sensitivity
-  mpu.setXGyroOffset(33);
+  mpu.setXGyroOffset(32);
   mpu.setYGyroOffset(-46);
-  mpu.setZGyroOffset(16);
-  mpu.setXAccelOffset(-3741); // 1688 factory default for my test chip
-  mpu.setYAccelOffset(622); // 1688 factory default for my test chip
-  mpu.setZAccelOffset(1815); // 1688 factory default for my test chip
+  mpu.setZGyroOffset(1);
+  mpu.setXAccelOffset(-3852); // 1688 factory default for my test chip
+  mpu.setYAccelOffset(666); // 1688 factory default for my test chip
+  mpu.setZAccelOffset(1796); // 1688 factory default for my test chip
   
   // make sure gyro is initialized
   if (devStatus == 0) {
@@ -81,7 +82,9 @@ void gyroSetup() {
   }
   Serial.println("Waiting for gyrovalues to stabilize");
   getRotation();
-  delay(10000);
+  delay(1000);
+  getRotation();
+  delay(1000);
   Serial.println("Gyro-setup finished");
 }
 
@@ -90,11 +93,9 @@ void gyroSetup() {
 void getRotation(){
   if (!dmpReady) return;
   // wait for MPU interrupt or extra packet(s) available
-  while (!mpuInterrupt && fifoCount < packetSize){
-    //no mpu data - performing PID calculations and output to motors 
-    //pid.Compute();
-    //motorController.move(output, MIN_ABS_SPEED);
-  }
+//  while (!mpuInterrupt && fifoCount < packetSize){
+//    //no mpu data - performing PID calculations and output to motors 
+//  }
   
   // reset interrupt flag and get INT_STATUS byte
   mpuInterrupt = false;
@@ -124,8 +125,8 @@ void getRotation(){
     mpu.dmpGetQuaternion(&q, fifoBuffer);
     mpu.dmpGetGravity(&gravity, &q);
     mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-    rotation360 = gyroMapping(ypr[0]*57.2957); // The last part converts to deg
-    rotation180 = ypr[0] * 57.2957;
+    robotAngelScale360 = gyroMapping(ypr[0]); 
+    robotAngelScale180 = ypr[0];
   }
 }
 
@@ -134,7 +135,8 @@ float gyroMapping(float angle){
   if (angle >= 0 and angle <= 180){
     return angle;
   } else {
-    return float((angle - 0) * (180 - 360) / (-180.0 -180.0) + 360); // I have written out the map function to return floats
-    //return float((angle - 0) * (M_PI - 2*M_PI) / (-2*M_PI) + 2*M_PI); // I have written out the map function to return floats
+    return float(angle * (-1*M_PI) / (-2*M_PI) + 2*M_PI); // I have written out the map function to return floats
+    // Look up arduino docs if problems
+    
   }
 }

@@ -34,21 +34,21 @@ struct Data_Package {
   byte j1PotY;
   byte j2PotX;
   byte j2PotY;
-//  byte j1Button;
-//  byte j2Button;
-//  byte up;
-//  byte down;
-//  byte left;
-//  byte right;
-//  byte pot1;
-//  byte pot2;
-//  byte switch1;
-//  byte switch2;
+  byte j1Button;
+  byte j2Button;
+  byte up;
+  byte down;
+  byte left;
+  byte right;
+  byte pot1;
+  byte pot2;
+  byte switch1;
+  byte switch2;
 };
 Data_Package data; //Create a variable with the above structure
 void setup() {
-//  Serial.begin(9600);
-//  Serial.println("Transmitter running");
+  Serial.begin(9600);
+  Serial.println("Transmitter running");
    
   // Define the radio communication
   radio.begin();
@@ -72,16 +72,16 @@ void setup() {
   data.j1PotY = 128;
   data.j2PotX = 127;
   data.j2PotY = 130;
-//  data.j1Button = 1;
-//  data.j2Button = 1;
-//  data.up = 1;
-//  data.down = 1;
-//  data.left = 1;
-//  data.right = 1;
-//  data.pot1 = 1;
-//  data.pot2 = 1;
-//  data.switch1 = 1;
-//  data.switch2 = 1;
+  data.j1Button = 1;
+  data.j2Button = 1;
+  data.up = 1;
+  data.down = 1;
+  data.left = 1;
+  data.right = 1;
+  data.pot1 = 1;
+  data.pot2 = 1;
+  data.switch1 = 1;
+  data.switch2 = 1;
 }
 void loop() {
   // Read all analog inputs and map them to one Byte value
@@ -90,45 +90,45 @@ void loop() {
   data.j2PotX = map(analogRead(j2X_PIN), 0, 1023, 0, 255);
   data.j2PotY = map(analogRead(j2Y_PIN), 0, 1023, 0, 255);
 
-//  data.pot1 = map(analogRead(POT_LEFT_PIN), 0, 1023, 0, 255);
-//  data.pot2 = map(analogRead(POT_RIGHT_PIN), 0, 1023, 255, 0); // reverse to get lowering the same on both pots
+  data.pot1 = map(analogRead(POT_LEFT_PIN), 0, 1023, 0, 255);
+  data.pot2 = map(analogRead(POT_RIGHT_PIN), 0, 1023, 255, 0); // reverse to get lowering the same on both pots
 
 
-//  if (analogRead(SWITCH_FOR_PIN) < 5){
-//    data.switch1 = 0;
-//    data.switch2 = 1;
-//  } else if (analogRead(SWITCH_BACK_PIN) < 5){
-//    data.switch2 = 0;
-//    data.switch1 = 1;
-//  } else {
-//    data.switch1 = 1;
-//    data.switch2 = 1;
-//  }
-//  
+  if (analogRead(SWITCH_FOR_PIN) < 5){
+    data.switch1 = 0;
+    data.switch2 = 1;
+  } else if (analogRead(SWITCH_BACK_PIN) < 5){
+    data.switch2 = 0;
+    data.switch1 = 1;
+  } else {
+    data.switch1 = 1;
+    data.switch2 = 1;
+  }
+  
 
   // Read all digital inputs
-//  data.j1Button = digitalRead(j1B_PIN);
-//  data.j2Button = digitalRead(j2B_PIN);
-//
-//  data.up = digitalRead(UP_PIN);
-//  data.down = digitalRead(DOWN_PIN);
-//  data.left = digitalRead(LEFT_PIN);
-//  data.right = digitalRead(RIGHT_PIN);
+  data.j1Button = digitalRead(j1B_PIN);
+  data.j2Button = digitalRead(j2B_PIN);
+
+  data.up = digitalRead(UP_PIN);
+  data.down = digitalRead(DOWN_PIN);
+  data.left = digitalRead(LEFT_PIN);
+  data.right = digitalRead(RIGHT_PIN);
 
   
   // Print data
-//  Serial.print("L_JOY XY: "); Serial.print(data.j1PotX); Serial.print(" , "); Serial.print(data.j1PotY); Serial.print(" , "); 
-//  Serial.print("L_B: "); Serial.print(data.j1Button); Serial.print(" , ");
-//  Serial.print("R_JOY XY:   "); Serial.print(data.j2PotX); Serial.print(" , "); Serial.print(data.j2PotY); Serial.print(" , ");
-//  Serial.print("R_B:   "); Serial.print(data.j2Button); Serial.print(" , ");
-//  Serial.print("UP: "); Serial.print(data.up); Serial.print(" , ");
-//  Serial.print("DOWN: "); Serial.print(data.down); Serial.print(" , ");
-//  Serial.print("LEFT: "); Serial.print(data.left); Serial.print(" , ");
-//  Serial.print("RIGHT: "); Serial.print(data.right); Serial.print(" , ");
-//  Serial.print("L_POT: "); Serial.print(data.pot1); Serial.print(" , "); 
-//  Serial.print("R_POT: "); Serial.print(data.pot2); Serial.print(" , "); 
-//  Serial.print("SW_FOR: "); Serial.print(data.switch1); Serial.print(" , "); 
-//  Serial.print("SW_BAC: "); Serial.print(data.switch2); Serial.println(); 
+  Serial.print("L_JOY XY: "); Serial.print(data.j1PotX); Serial.print(" , "); Serial.print(data.j1PotY); Serial.print(" , "); 
+  Serial.print("L_B: "); Serial.print(data.j1Button); Serial.print(" , ");
+  Serial.print("R_JOY XY:   "); Serial.print(data.j2PotX); Serial.print(" , "); Serial.print(data.j2PotY); Serial.print(" , ");
+  Serial.print("R_B:   "); Serial.print(data.j2Button); Serial.print(" , ");
+  Serial.print("UP: "); Serial.print(data.up); Serial.print(" , ");
+  Serial.print("DOWN: "); Serial.print(data.down); Serial.print(" , ");
+  Serial.print("LEFT: "); Serial.print(data.left); Serial.print(" , ");
+  Serial.print("RIGHT: "); Serial.print(data.right); Serial.print(" , ");
+  Serial.print("L_POT: "); Serial.print(data.pot1); Serial.print(" , "); 
+  Serial.print("R_POT: "); Serial.print(data.pot2); Serial.print(" , "); 
+  Serial.print("SW_FOR: "); Serial.print(data.switch1); Serial.print(" , "); 
+  Serial.print("SW_BAC: "); Serial.print(data.switch2); Serial.println(); 
 
   // Send the whole data from the structure to the receiver
   radio.write(&data, sizeof(Data_Package));
