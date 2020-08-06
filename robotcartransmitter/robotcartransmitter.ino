@@ -32,8 +32,8 @@ const byte address[6] = "00001"; // Address
 struct Data_Package {
   byte j1PotX;
   byte j1PotY;
-  byte j2PotX;
-  byte j2PotY;
+//  byte j2PotX;
+//  byte j2PotY;
 //  byte j1Button;
 //  byte j2Button;
 //  byte up;
@@ -69,8 +69,8 @@ void setup() {
   // Set initial default values
   data.j1PotX = 126; // Values from 0 to 255. When Joystick is in resting position, the value is in the middle, or 127. We actually map the pot value from 0 to 1023 to 0 to 255 because that's one BYTE value
   data.j1PotY = 128;
-  data.j2PotX = 127;
-  data.j2PotY = 130;
+//  data.j2PotX = 127;
+//  data.j2PotY = 130;
 //  data.j1Button = 1;
 //  data.j2Button = 1;
 //  data.up = 1;
@@ -86,8 +86,8 @@ void loop() {
   // Read all analog inputs and map them to one Byte value
   data.j1PotX = map(analogRead(j1X_PIN), 0, 1023, 0, 255); // Convert the analog read value from 0 to 1023 into a BYTE value from 0 to 255
   data.j1PotY = map(analogRead(j1Y_PIN), 0, 1023, 0, 255);
-  data.j2PotX = map(analogRead(j2X_PIN), 0, 1023, 0, 255);
-  data.j2PotY = map(analogRead(j2Y_PIN), 0, 1023, 0, 255);
+//  data.j2PotX = map(analogRead(j2X_PIN), 0, 1023, 0, 255);
+//  data.j2PotY = map(analogRead(j2Y_PIN), 0, 1023, 0, 255);
 //
 //  data.pot1 = map(analogRead(POT_LEFT_PIN), 0, 1023, 0, 255);
 //  data.pot2 = map(analogRead(POT_RIGHT_PIN), 0, 1023, 255, 0); // reverse to get lowering the same on both pots

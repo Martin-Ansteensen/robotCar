@@ -100,7 +100,7 @@ void driveMeccanumGyro(float angle, float mSpeed){
         largest = abs(calculatedSpeed[i]);
       }
     }
-    // Only scale speeds if the largest "speed" exceeds limits
+//     Only scale speeds if the largest "speed" exceeds limits
     if (largest > 255.0){
       // Serial.println("Scaling down motor speeds");
       for (int i = 0; i < 4; i++){

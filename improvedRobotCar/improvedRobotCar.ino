@@ -10,14 +10,14 @@ void setup(){
   gyroSetup();
   motorSetup();
   recieverSetup();
+  encoderSetup();
   Serial.println("Robotcar finished initializing");
 
 }
  
 void loop(){
-  recieveData();
-  calculateFromRadio();
-  radioControl();
-  //driveMeccanumGyro(0, 75);
-  //driveMeccanum(0, 200, 10000);
+  //recieveData();
+  //calculateFromRadio();
+  //radioControl();
+ 
 }
