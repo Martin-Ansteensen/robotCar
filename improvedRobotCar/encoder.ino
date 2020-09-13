@@ -1,23 +1,11 @@
 
-#define inputClkVerticalLeftEncoder 1
-#define inputClkVerticalRightEncoder 2
-#define inputClkNormalEncoder 3
+#define inputClkVerticalLeftEncoder 46
+#define inputClkVerticalRightEncoder 44
+#define inputClkNormalEncoder 48
 
-#define inputDirVerticalLeftEncoder 4
-#define inputDirVerticalRightEncoder 5
-#define inputDirNormalEncoder 6
-
-// int verticalLeftEncoderCounter = 0;
-// int verticalLeftEncoderCLK;
-// int prevVerticalLeftEncoderCLK;
-
-// int verticalRightEncoderCounter = 0;
-// int verticalRightEncoderCLK;
-// int prevVerticalRightEncoderCLK;
-
-// int normalEncoderCounter = 0;
-// int normalEncoderCLK;
-// int prevNormalEncoderCLK;
+#define inputDirVerticalLeftEncoder 47
+#define inputDirVerticalRightEncoder 45
+#define inputDirNormalEncoder 49
 
 // The sublists are the encoders in this order: verticalLeft, verticalRight, normal
 // The content of these sunlists are: [inputClock, inputDirection, counter, currentClockState, prevClockState]
@@ -25,10 +13,10 @@ int encoderData[][5] = {
   {inputClkVerticalLeftEncoder, inputDirVerticalLeftEncoder, 0, 0, 0}, 
   {inputClkVerticalRightEncoder, inputDirVerticalRightEncoder, 0, 0, 0}, 
   {inputClkNormalEncoder, inputDirNormalEncoder, 0, 0, 0}
-}
+};
 
 
-void encoderSetup(){
+void encoderSetup() {
   Serial.println("Encoder initializing");
   pinMode(encoderData[0][0], INPUT);
   pinMode(encoderData[1][0], INPUT);
@@ -50,140 +38,129 @@ void readEncoders(){
 
   for (int i = 0; i < 3; i++) {
     // Read the current state of the encoder
-    encoderData[i][3] = digitalRead(encoderData[i][0])
+    encoderData[i][3] = digitalRead(encoderData[i][0]);
     
     // If the previous and the current state of the inputCLK are different then a pulse has occured
     if (encoderData[i][3] != encoderData[i][4]){
       
-      // If the inputDT state is different than the inputCLK state then 
+      // If the direction state is different than the clock state then 
       // the encoder is rotating counterclockwise
       if (digitalRead(encoderData[i][1]) != encoderData[i][4]){
+
+        if (i == 0){
+          encoderData[i][2] ++;  //INvert the left encoder
+        } else{
+          encoderData[i][2] --;  
+        }
         
-        encoderData[i][2] --;
-      
+      // The direction state is the same as the clock state
+      // the encoder is rotating clockwise
       } else {
-      
-        encoderData[i][2] ++;
+        
+        if (i == 0){
+          encoderData[i][2] --;  
+        } else{
+          encoderData[i][2] ++;  
+        }
+        
       
       }
     }
     encoderData[i][4] = encoderData[i][3];
   }
-
+  
+/*
+  Serial.print("Left, right and bottom encoder: "); 
+  Serial.print(encoderData[0][2]); Serial.print(", "); //0.29845130209
+  Serial.print(encoderData[1][2]); Serial.print(", "); 
+  Serial.print(encoderData[2][2]);
+  Serial.println();
+*/
 }
+
+int factor = 10000;
+
+double cmPerTick = 0.2984*factor; //0.29845130209 pi*3.8/40
+int verticalLeftEncoder;
+int prevVerticalLeftEncoder = 0;
+int verticalRightEncoder;
+int prevVerticalRightEncoder = 0;
+int normalEncoder;
+int prevNormalEncoder = 0;
+
+double leftChange;
+double rightChange;
+double changeOrientation;
+double orientationRads;
+
+int rawHorizontalChange;
+double horizontalChange;
+
+// The normal turns 60ticks per 90deg -> 
+double normalTickPerRadOffset = 38.1971*factor;//0.66*factor; // deg 60/90 or rad 60/(pi/2)
+
+double centerChange = 0;
+double globalXPos = 0;
+double globalYPos = 0;
+double encoderDist = 17.2*factor;
+
+double oldX, tmp1, tmp2, tmp3;
 
 void processEncoderData(){
-  int encoderDist = 10;
-
-  int verticalLeftEncoder; // Should be the number of ticks multi. by the wheel circumference
-  int prevVerticalLeftEncoder;
-  int verticalRightEncoder;
-  int prevVerticalRightEncoder;
-  int normalEncoder;
-  int prevNormalEncoder;
-
-  int leftChange;
-  int rightChange;
-  int changeOrientation;
-  int orientationRads;
-
-  int rawHorizontalChange;
-  int horizontalChange;
-
-  int centerChange;
-  int globalXPos;
-  int globalYPos;
+  verticalLeftEncoder = encoderData[0][2]; 
+  verticalRightEncoder = encoderData[1][2];
+  normalEncoder = encoderData[2][2];
 
   // Get current position
-  leftChange = verticalLeftEncoder-prevVerticalLeftEncoder;
-  rightChange = verticalRightEncoder-prevVerticalRightEncoder;
+  leftChange = (verticalLeftEncoder - prevVerticalLeftEncoder)*cmPerTick;
+  rightChange = (verticalRightEncoder - prevVerticalRightEncoder)*cmPerTick;
+  rawHorizontalChange = (normalEncoder - prevNormalEncoder)*cmPerTick;
 
   // Calculate angle
-  changeOrientation = (leftChange-rightChange)/encoderDist; //
-  orientationRads += changeOrientation; //
+  changeOrientation = (leftChange-rightChange)/encoderDist; // arcLength = angle/360deg * 2pi*r = angle/2pi * 2pi*r = angle*r
+  orientationRads = orientationRads + changeOrientation;
 
   // Get x and y component of the motion
-  rawHorizontalChange = normalEncoder - prevNormalEncoder;
-  horizontalChange = rawHorizontalChange - (changeOrientation*horizontalEncoderTickPerDegreeOffset)
-  centerChange =  = (rightChange + leftChange)/2; //
-  globalXPos += centerChange*sin(orientationRads) + horizontalChange*cos(orientationRads);
-  globalYPos += centerChange*cos(orientationRads) - horizontalChange*sin(orientationRads);
+  horizontalChange = rawHorizontalChange; //- (changeOrientation*normalTickPerRadOffset);
+  centerChange = (rightChange + leftChange)/2;        // Creates degrees
+  globalXPos += (centerChange*sin(orientationRads))/factor + (horizontalChange*cos(orientationRads))/factor + (changeOrientation*normalTickPerRadOffset/factor*cmPerTick/factor) ; // switch cos and sin for x and y first component
+  globalYPos += (centerChange*cos(orientationRads))/factor - (horizontalChange*sin(orientationRads))/factor;
 
-}
+//  globalXPos += (centerChange*sin(orientationRads))/factor + (horizontalChange*cos(orientationRads))/factor  ;
+//  globalYPos += (centerChange*cos(orientationRads))/factor - (horizontalChange*sin(orientationRads))/factor  ;
 
-
-/* 
-#define inputCLK 48
-#define inputDT 49
- 
-// 40 ticks per revolution
-int counter = 0;
-int currentStateCLK;
-int previousStateCLK;
-String encdir ="";
-
-void encoderSetup(){
-  Serial.println("Encoder initializing");
-  // set the encoder pins as inputs
-  pinMode (inputCLK,INPUT);
-  pinMode (inputDT,INPUT);
-
-  // Read the initial state of inputCLK
-  // Assign to previousStateCLK variable
-  previousStateCLK = digitalRead(inputCLK);
-  Serial.println("Encoder setup finished");
-}
-
-
-void readEncoders(){
-  // Read the current state of inputCLK
-  currentStateCLK = digitalRead(inputCLK);
   
-  // If the previous and the current state of the inputCLK are different then a pulse has occured
-  if (currentStateCLK != previousStateCLK){ 
-     
-   // If the inputDT state is different than the inputCLK state then 
-   // the encoder is rotating counterclockwise
-   if (digitalRead(inputDT) != currentStateCLK) { 
-     counter --;
-     encdir ="CCW";
-     
-   } else {
-     // Encoder is rotating clockwise
-     counter ++;
-     encdir ="CW";
-     
+  prevVerticalLeftEncoder = verticalLeftEncoder;
+  prevVerticalRightEncoder = verticalRightEncoder;
+  prevNormalEncoder = normalEncoder;
+
+//  Serial.print("L,R,N,C change: "); 
+//  Serial.print(leftChange); Serial.print(", "); 
+//  Serial.print(rightChange); Serial.print(", "); 
+//  Serial.print(rawHorizontalChange); Serial.print(", "); 
+//  Serial.print(centerChange); 
+
+//  Serial.print("x, y and angle traveled in cm: "); 
+//  Serial.print(globalXPos); Serial.print(", "); 
+//  Serial.print(globalYPos); Serial.print(", "); 
+//  Serial.print(orientationRads*57.3);
+   if (oldX != globalXPos){
+        Serial.print("x, angle, first, second, third part of equation: "); 
+    Serial.print(globalXPos); Serial.print(", "); 
+    Serial.print(orientationRads*57.3); Serial.print(", "); 
+    tmp1  += rawHorizontalChange/factor; //(centerChange*sin(orientationRads))/factor;
+    tmp2 += (horizontalChange*cos(orientationRads))/factor; 
+    tmp3 += changeOrientation*normalTickPerRadOffset/factor*cmPerTick/factor;
+    Serial.print(tmp1); Serial.print(", "); 
+    Serial.print(tmp2); Serial.print(", ");     
+    Serial.print(tmp3); Serial.print(", ");     
+  
+   Serial.println();
    }
-   Serial.print("Direction: ");
-   Serial.print(encdir);
-   Serial.print(" -- Value: ");
-   Serial.println(counter);
-  } 
-  // Update previousStateCLK with the current state
-  previousStateCLK = currentStateCLK;  
+
+  
+
+  oldX = globalXPos;
 }
-*/
 
-// All angles are in radians
-// int distLeftX = 0;
-// int distRightX = 0;
-// int distBottomY = 0;
-// int xToCenterDist = 10;
-// int yToCenterDist = 10;
-// int angle;
-
-// int distMiddle;
-// int pastOrientation = 0;
-// int newOrientation = 0;
-// int pastX = 0;
-// int pastY = 0;
-// int currentX = 0;
-// int currentY = 0;
-
-// angle = (distRightX-distLeftX)/xToCenterDist;
-// distMiddle = (distRightX-distLeftX)/2 ;
-// currentX = pastX + ((distMiddle/angle)*sin(angle)/cos(angle))*cos(pastOrientation + angle/2);
-// currentY = pastX + ((distMiddle/angle)*sin(angle)/cos(angle))*cos(pastOrientation + angle/2);
-// newOrientation = pastOrientation + angle;
-// pastX = currentX;
-// pastY = currentY; 
+ 
