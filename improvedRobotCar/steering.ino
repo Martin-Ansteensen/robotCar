@@ -1,37 +1,33 @@
 //  Motor variables
-//  Driver Left
 
 // Front left
-const byte enBL = 3; //3
-const byte in3L = 23; 
-const byte in4L = 22; 
+#define enBLeft 3
+#define in3Left 23 
+#define in4Left 22 
  
 //  Back left
-const byte enAL = 5; //7
-const byte in1L = 25; // Any digital
-const byte in2L = 24; // Any digital
+#define enALeft 5
+#define in1Left 25
+#define in2Left 24
 
-
-//  Driver Right
 
 //  Front right
-const byte enAR = 7; //5
-const byte in1R = 29;
-const byte in2R = 28;
+#define enARight 7
+#define in1Right 29
+#define in2Right 28
 
 //  Back right
-const byte enBR = 6; // 6
-const byte in3R = 26; 
-const byte in4R = 27;
+#define enARight 6
+#define in3Right 26
+#define in4Right 27
 
-//20, 0, 10
-//60, 0, 40
+
 // Integral has to be very low until the gyro starts at 0.00
-int calculatedSpeed[4];
-float cPID = 0;
+int calculatedSpeed[4]; // Front left, front right, back left, back right
+float calculatedPID = 0;
 float Kp = 120 , Ki = 0.05, Kd = 60;
 float total = 0;
-float derivative, previousError, integral, runtime, error;
+float derivative, previousError, integral, error;
 
 // Motor chart
 //Back tracking enocoder wheel
@@ -40,67 +36,65 @@ float derivative, previousError, integral, runtime, error;
 // 1      2
 
 
-
 void motorSetup(){
   Serial.println("Initializing motors");
-  //  Set all the motor control pins to outputs
+  //  Set all the motor control pins as outputs
   
   //  Left motors
-  pinMode(enAL, OUTPUT);
-  pinMode(enBL, OUTPUT);
-  pinMode(in1L, OUTPUT);
-  pinMode(in2L, OUTPUT);
-  pinMode(in3L, OUTPUT);
-  pinMode(in4L, OUTPUT);
+  pinMode(enALeft, OUTPUT);
+  pinMode(enBLeft, OUTPUT);
+  pinMode(in1Left, OUTPUT);
+  pinMode(in2Left, OUTPUT);
+  pinMode(in3Left, OUTPUT);
+  pinMode(in4Left, OUTPUT);
 
   //  Right motors
-  pinMode(enAR, OUTPUT);
-  pinMode(enBR, OUTPUT);
-  pinMode(in1R, OUTPUT);
-  pinMode(in2R, OUTPUT);
-  pinMode(in3R, OUTPUT);
-  pinMode(in4R, OUTPUT);
+  pinMode(enARight, OUTPUT);
+  pinMode(enARight, OUTPUT);
+  pinMode(in1Right, OUTPUT);
+  pinMode(in2Right, OUTPUT);
+  pinMode(in3Right, OUTPUT);
+  pinMode(in4Right, OUTPUT);
 
 }
 
-float controllerPID (float previousError, int runtime){
+float controllerPID (float previousError){
   getRotation();
   error = desiredAngelScale180-robotAngelScale180;  
-  integral += error; //(error*runtime); 
-  derivative = (error-previousError); // / runtime;
+  integral += error; // (error*runtime); 
+  derivative = (error-previousError); // (error-previousError)/runtime;
   total = error*Kp+ integral*Ki + derivative*Kd;
   return total;
 }
 
 void runPID(){
-  int InitTime = micros();
-  cPID = controllerPID(previousError, runtime);
+  // int InitTime = micros();
+  calculatedPID = controllerPID(previousError);
   previousError = error;
-  runtime = float ( micros() - InitTime ) / 1000000.0;
+  //runtime = float ( micros() - InitTime ) / 1000000.0;
 }
 
 void calculateSpeed(int mSpeed, float angle, double error){
   calculatedSpeed[0] = (mSpeed*sin(angle+M_PI/4)*sqrt(2)) - error; // Front left
-  calculatedSpeed[1] = (mSpeed*cos(angle+M_PI/4)*sqrt(2))+error; // Front right
-  calculatedSpeed[2] = (mSpeed*cos(angle+M_PI/4)*sqrt(2))- error; // Back left
-  calculatedSpeed[3] = (mSpeed*sin(angle+M_PI/4)*sqrt(2))+error; // Back right
+  calculatedSpeed[1] = (mSpeed*cos(angle+M_PI/4)*sqrt(2)) + error; // Front right
+  calculatedSpeed[2] = (mSpeed*cos(angle+M_PI/4)*sqrt(2)) - error; // Back left
+  calculatedSpeed[3] = (mSpeed*sin(angle+M_PI/4)*sqrt(2)) + error; // Back right
 }
 
 
-
 void driveMeccanumGyro(float angle, float mSpeed){
-    //desiredAngelScale180 = 0;
-    runPID();
-    calculateSpeed(mSpeed, angle, cPID);
 
-    // Scale the speeds in case one of them exceeds the motors limits
+    runPID();
+    calculateSpeed(mSpeed, angle, calculatedPID);
+
+    //  Scale the speeds in case one of them exceeds the motors limits
     double largest = abs(calculatedSpeed[0]);
     for (int i = 1; i < 4; i++){
       if (abs(calculatedSpeed[i]) > largest){
         largest = abs(calculatedSpeed[i]);
       }
     }
-//     Only scale speeds if the largest "speed" exceeds limits
+    //  Only scale speeds if the largest "speed" exceeds limits
     if (largest > 255.0){
       // Serial.println("Scaling down motor speeds");
       for (int i = 0; i < 4; i++){
@@ -109,20 +103,20 @@ void driveMeccanumGyro(float angle, float mSpeed){
     }
     
     motorDirection();
-    analogWrite(enBL, abs(calculatedSpeed[0])); // Front left
-    analogWrite(enAR, abs(calculatedSpeed[1])); // Front right
-    analogWrite(enAL, abs(calculatedSpeed[2])); // Back left
-    analogWrite(enBR, abs(calculatedSpeed[3])); // Back right
-//
-//    Serial.print(" | motor1  = "); Serial.print(calculatedSpeed[0]);
-//    Serial.print(" | motor2  = "); Serial.print(calculatedSpeed[1]);
-//    Serial.print(" | motor3  = "); Serial.print(calculatedSpeed[2]);
-//    Serial.print(" | motor4  = "); Serial.print(calculatedSpeed[3]);
-//    //Serial.print(" | desired angel  = "); Serial.print(desiredAngelScale180*57.2957);
-//    //Serial.print(" | robot angel  = "); Serial.print(robotAngelScale180*57.2957);
-//    Serial.print(" | error  = "); Serial.print(cPID);
-//    Serial.println("");  
-
+    analogWrite(enBLeft, abs(calculatedSpeed[0])); // Front left
+    analogWrite(enARight, abs(calculatedSpeed[1])); // Front right
+    analogWrite(enALeft, abs(calculatedSpeed[2])); // Back left
+    analogWrite(enARight, abs(calculatedSpeed[3])); // Back right
+/*
+   Serial.print(" | motor1  = "); Serial.print(calculatedSpeed[0]);
+   Serial.print(" | motor2  = "); Serial.print(calculatedSpeed[1]);
+   Serial.print(" | motor3  = "); Serial.print(calculatedSpeed[2]);
+   Serial.print(" | motor4  = "); Serial.print(calculatedSpeed[3]);
+   //Serial.print(" | desired angel  = "); Serial.print(desiredAngelScale180*57.2957);
+   //Serial.print(" | robot angel  = "); Serial.print(robotAngelScale180*57.2957);
+   Serial.print(" | error  = "); Serial.print(calculatedPID);
+   Serial.println("");  
+*/
  }
 
 
@@ -130,10 +124,10 @@ void driveMeccanum(float angle, float mSpeed, float duration){
 
     calculateSpeed(mSpeed, radians(angle), 0.0);
     motorDirection();
-    analogWrite(enBL, abs(calculatedSpeed[0])); // Front left
-    analogWrite(enAR, abs(calculatedSpeed[1])); // Front right
-    analogWrite(enAL, abs(calculatedSpeed[2])); // Back left
-    analogWrite(enBR, abs(calculatedSpeed[3])); // Back right
+    analogWrite(enBLeft, abs(calculatedSpeed[0])); // Front left
+    analogWrite(enARight, abs(calculatedSpeed[1])); // Front right
+    analogWrite(enALeft, abs(calculatedSpeed[2])); // Back left
+    analogWrite(enARight, abs(calculatedSpeed[3])); // Back right
 
     Serial.print(" | motor1  = "); Serial.print(calculatedSpeed[0]);
     Serial.print(" | motor2  = "); Serial.print(calculatedSpeed[1]);
@@ -174,54 +168,54 @@ void motorDirection(){
 
 // Front left
 void FrontLeftForward(){
-  digitalWrite(in3L, LOW);
-  digitalWrite(in4L, HIGH);
+  digitalWrite(in3Left, LOW);
+  digitalWrite(in4Left, HIGH);
 }
 void FrontLeftBackward(){
-  digitalWrite(in3L, HIGH);
-  digitalWrite(in4L, LOW);
+  digitalWrite(in3Left, HIGH);
+  digitalWrite(in4Left, LOW);
 }
 
 // Front right
 void FrontRightForward(){
-  digitalWrite(in1R, LOW);
-  digitalWrite(in2R, HIGH);
+  digitalWrite(in1Right, LOW);
+  digitalWrite(in2Right, HIGH);
 }
 void FrontRightBackward(){
-  digitalWrite(in1R, HIGH);
-  digitalWrite(in2R, LOW);
+  digitalWrite(in1Right, HIGH);
+  digitalWrite(in2Right, LOW);
 }
 
 // Back left
 void BackLeftForward(){
-  digitalWrite(in1L, HIGH);
-  digitalWrite(in2L, LOW);
+  digitalWrite(in1Left, HIGH);
+  digitalWrite(in2Left, LOW);
 }
 void BackLeftBackward(){
-  digitalWrite(in1L, LOW);
-  digitalWrite(in2L, HIGH);
+  digitalWrite(in1Left, LOW);
+  digitalWrite(in2Left, HIGH);
 }
 
 // Back right
 void BackRightForward(){
-  digitalWrite(in3R, LOW);
-  digitalWrite(in4R, HIGH);
+  digitalWrite(in3Right, LOW);
+  digitalWrite(in4Right, HIGH);
 }
 void BackRightBackward(){
-  digitalWrite(in3R, HIGH);
-  digitalWrite(in4R, LOW);
+  digitalWrite(in3Right, HIGH);
+  digitalWrite(in4Right, LOW);
 }
 
 void DisableAll(){
-  digitalWrite(in1L, LOW);
-  digitalWrite(in2L, LOW);
+  digitalWrite(in1Left, LOW);
+  digitalWrite(in2Left, LOW);
   
-  digitalWrite(in1R, LOW);
-  digitalWrite(in2R, LOW);
+  digitalWrite(in1Right, LOW);
+  digitalWrite(in2Right, LOW);
 
-  digitalWrite(in3R, LOW);
-  digitalWrite(in4R, LOW);
+  digitalWrite(in3Right, LOW);
+  digitalWrite(in4Right, LOW);
    
-  digitalWrite(in3L, LOW);
-  digitalWrite(in4L, LOW);
+  digitalWrite(in3Left, LOW);
+  digitalWrite(in4Left, LOW);
 }

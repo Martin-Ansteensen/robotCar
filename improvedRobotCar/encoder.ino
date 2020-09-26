@@ -8,7 +8,7 @@
 #define inputDirNormalEncoder 49
 
 // The sublists are the encoders in this order: verticalLeft, verticalRight, normal
-// The content of these sunlists are: [inputClock, inputDirection, counter, currentClockState, prevClockState]
+// The content of these sublists are: [inputClock, inputDirection, counter, currentClockState, prevClockState]
 int encoderData[][5] = {
   {inputClkVerticalLeftEncoder, inputDirVerticalLeftEncoder, 0, 0, 0}, 
   {inputClkVerticalRightEncoder, inputDirVerticalRightEncoder, 0, 0, 0}, 
@@ -18,6 +18,7 @@ int encoderData[][5] = {
 
 void encoderSetup() {
   Serial.println("Encoder initializing");
+  //  Set the encoder pins as inputs
   pinMode(encoderData[0][0], INPUT);
   pinMode(encoderData[1][0], INPUT);
   pinMode(encoderData[2][0], INPUT);
@@ -48,7 +49,7 @@ void readEncoders(){
       if (digitalRead(encoderData[i][1]) != encoderData[i][4]){
 
         if (i == 0){
-          encoderData[i][2] ++;  //INvert the left encoder
+          encoderData[i][2] ++;  //Invert the left encoder
         } else{
           encoderData[i][2] --;  
         }
@@ -80,7 +81,7 @@ void readEncoders(){
 
 int factor = 10000;
 
-double cmPerTick = 0.2984*factor; //0.29845130209 pi*3.8/40
+double cmPerTick = 0.2984*factor; //0.29845130209 = pi*3.8/40 (pi*wheel diameter/ticks per rev)
 int verticalLeftEncoder;
 int prevVerticalLeftEncoder = 0;
 int verticalRightEncoder;
@@ -96,15 +97,24 @@ double orientationRads;
 int rawHorizontalChange;
 double horizontalChange;
 
-// The normal turns 60ticks per 90deg -> 
-double normalTickPerRadOffset = 38.1971*factor;//0.66*factor; // deg 60/90 or rad 60/(pi/2)
+// The normal turns 60ticks per 90deg
+
+// 17 cm per 90deg
+// 10.8 = 17/(pi/2) (90deg)
+
+// 11.92 cm from center to wheel center
+// Calculate cm per rad: (11.92*2*3.8)/(pi*2) = 14.4181646046
+double normalCmPerRadOffset = 14.4181*factor;
+
+// (24*pi)/(pi/38)= num rotations per 360deg
+// 1.57*40 = 63 ticks per 360 deg
 
 double centerChange = 0;
 double globalXPos = 0;
 double globalYPos = 0;
-double encoderDist = 17.2*factor;
+double encoderDist = 17.28*factor;
 
-double oldX, tmp1, tmp2, tmp3;
+double tmp1 = 0;
 
 void processEncoderData(){
   verticalLeftEncoder = encoderData[0][2]; 
@@ -121,46 +131,35 @@ void processEncoderData(){
   orientationRads = orientationRads + changeOrientation;
 
   // Get x and y component of the motion
-  horizontalChange = rawHorizontalChange; //- (changeOrientation*normalTickPerRadOffset);
+  horizontalChange = rawHorizontalChange + (changeOrientation*normalCmPerRadOffset);
   centerChange = (rightChange + leftChange)/2;        // Creates degrees
-  globalXPos += (centerChange*sin(orientationRads))/factor + (horizontalChange*cos(orientationRads))/factor + (changeOrientation*normalTickPerRadOffset/factor*cmPerTick/factor) ; // switch cos and sin for x and y first component
+  globalXPos += (centerChange*sin(orientationRads))/factor + (horizontalChange*cos(orientationRads))/factor;// + (changeOrientation*normalCmPerRadOffset/factor*cmPerTick/factor) ; // switch cos and sin for x and y first component
   globalYPos += (centerChange*cos(orientationRads))/factor - (horizontalChange*sin(orientationRads))/factor;
 
 //  globalXPos += (centerChange*sin(orientationRads))/factor + (horizontalChange*cos(orientationRads))/factor  ;
 //  globalYPos += (centerChange*cos(orientationRads))/factor - (horizontalChange*sin(orientationRads))/factor  ;
 
-  
+
+  Serial.print("x, y and angle traveled in cm: "); 
+  Serial.print(globalXPos); Serial.print(", "); 
+  Serial.print(globalYPos); Serial.print(", "); 
+  Serial.print(orientationRads*57.3);
+
+/*
+  if (true){
+    Serial.print("angle, raw x: "); 
+    Serial.print(orientationRads*57.3); Serial.print(", "); 
+    tmp1  += (normalEncoder - prevNormalEncoder)*0.2984; 
+    Serial.print(tmp1); Serial.print(", ");    
+    Serial.println();
+    
+   }*/
+   Serial.println();
+
   prevVerticalLeftEncoder = verticalLeftEncoder;
   prevVerticalRightEncoder = verticalRightEncoder;
   prevNormalEncoder = normalEncoder;
 
-//  Serial.print("L,R,N,C change: "); 
-//  Serial.print(leftChange); Serial.print(", "); 
-//  Serial.print(rightChange); Serial.print(", "); 
-//  Serial.print(rawHorizontalChange); Serial.print(", "); 
-//  Serial.print(centerChange); 
-
-//  Serial.print("x, y and angle traveled in cm: "); 
-//  Serial.print(globalXPos); Serial.print(", "); 
-//  Serial.print(globalYPos); Serial.print(", "); 
-//  Serial.print(orientationRads*57.3);
-   if (oldX != globalXPos){
-        Serial.print("x, angle, first, second, third part of equation: "); 
-    Serial.print(globalXPos); Serial.print(", "); 
-    Serial.print(orientationRads*57.3); Serial.print(", "); 
-    tmp1  += rawHorizontalChange/factor; //(centerChange*sin(orientationRads))/factor;
-    tmp2 += (horizontalChange*cos(orientationRads))/factor; 
-    tmp3 += changeOrientation*normalTickPerRadOffset/factor*cmPerTick/factor;
-    Serial.print(tmp1); Serial.print(", "); 
-    Serial.print(tmp2); Serial.print(", ");     
-    Serial.print(tmp3); Serial.print(", ");     
-  
-   Serial.println();
-   }
-
-  
-
-  oldX = globalXPos;
 }
 
  
