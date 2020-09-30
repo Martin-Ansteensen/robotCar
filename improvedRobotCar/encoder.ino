@@ -15,7 +15,6 @@ int encoderData[][5] = {
   {inputClkNormalEncoder, inputDirNormalEncoder, 0, 0, 0}
 };
 
-
 void encoderSetup() {
   Serial.println("Encoder initializing");
   //  Set the encoder pins as inputs
@@ -48,8 +47,8 @@ void readEncoders(){
       // the encoder is rotating counterclockwise
       if (digitalRead(encoderData[i][1]) != encoderData[i][4]){
 
-        if (i == 0){
-          encoderData[i][2] ++;  //Invert the left encoder
+        if (i == 0){  // Invert the left encoder compared to the left and right
+          encoderData[i][2] ++;  
         } else{
           encoderData[i][2] --;  
         }
@@ -58,7 +57,7 @@ void readEncoders(){
       // the encoder is rotating clockwise
       } else {
         
-        if (i == 0){
+        if (i == 0){  // Invert the left encoder compared to the left and right
           encoderData[i][2] --;  
         } else{
           encoderData[i][2] ++;  
@@ -67,7 +66,7 @@ void readEncoders(){
       
       }
     }
-    encoderData[i][4] = encoderData[i][3];
+    encoderData[i][4] = encoderData[i][3]; // Set prevClockState equal to current clock state
   }
   
 /*
@@ -79,9 +78,27 @@ void readEncoders(){
 */
 }
 
-int factor = 10000;
+// Research why one get strange results with big int*double
 
-double cmPerTick = 0.2984*factor; //0.29845130209 = pi*3.8/40 (pi*wheel diameter/ticks per rev)
+
+//
+// ROBOT FACTS
+// OMNI WHEEL DIAMETER: 3.8CM
+// MECCANUM WHEEL DIAMETER: 8CM
+// DISTACNE FROM LEFT- TO RIGHT ENCODER: 17.28 CM
+// DISTANCE FROM NORMAL ENCODER TO ROBOT CENTER: 11.92CM
+// ENCODER TICKS PER REVOLUTION: 40
+// ALL ANGLES ARE IN RADS
+//
+
+// Constants for robot/wheelbase/odomtery configurarion
+
+const double factor = 1000000;
+const double cmPerTick = 0.29845130209*factor; // pi*3.8/40
+const double encoderDist = 17.28*factor; // Distance from left- to right encoder
+const double normalCmPerRadOffset = 14.4181646046*factor; // (11.92*2*3.8)/(2*pi)
+
+
 int verticalLeftEncoder;
 int prevVerticalLeftEncoder = 0;
 int verticalRightEncoder;
@@ -89,32 +106,16 @@ int prevVerticalRightEncoder = 0;
 int normalEncoder;
 int prevNormalEncoder = 0;
 
-double leftChange;
-double rightChange;
-double changeOrientation;
-double orientationRads;
-
+int leftChange;
+int rightChange;
 int rawHorizontalChange;
+double orientationChange;
 double horizontalChange;
+double centerChange;
 
-// The normal turns 60ticks per 90deg
-
-// 17 cm per 90deg
-// 10.8 = 17/(pi/2) (90deg)
-
-// 11.92 cm from center to wheel center
-// Calculate cm per rad: (11.92*2*3.8)/(pi*2) = 14.4181646046
-double normalCmPerRadOffset = 14.4181*factor;
-
-// (24*pi)/(pi/38)= num rotations per 360deg
-// 1.57*40 = 63 ticks per 360 deg
-
-double centerChange = 0;
-double globalXPos = 0;
-double globalYPos = 0;
-double encoderDist = 17.28*factor;
-
-double tmp1 = 0;
+double globalOrientation;
+double globalXPos;
+double globalYPos;
 
 void processEncoderData(){
   verticalLeftEncoder = encoderData[0][2]; 
@@ -122,44 +123,31 @@ void processEncoderData(){
   normalEncoder = encoderData[2][2];
 
   // Get current position
-  leftChange = (verticalLeftEncoder - prevVerticalLeftEncoder)*cmPerTick;
-  rightChange = (verticalRightEncoder - prevVerticalRightEncoder)*cmPerTick;
-  rawHorizontalChange = (normalEncoder - prevNormalEncoder)*cmPerTick;
-
+  leftChange = (verticalLeftEncoder - prevVerticalLeftEncoder);
+  rightChange = (verticalRightEncoder - prevVerticalRightEncoder);
+  rawHorizontalChange = (normalEncoder - prevNormalEncoder);
+  centerChange = ((rightChange + leftChange)*cmPerTick)/2.0;  // Calculate the average change, accordingly the center change
+  
   // Calculate angle
-  changeOrientation = (leftChange-rightChange)/encoderDist; // arcLength = angle/360deg * 2pi*r = angle/2pi * 2pi*r = angle*r
-  orientationRads = orientationRads + changeOrientation;
+  orientationChange = ((leftChange-rightChange)*cmPerTick)/encoderDist; // lenght of arc = angle/360deg * 2pi*r = angle/2pi * 2pi*r = angle*r
+  globalOrientation = globalOrientation + orientationChange;
 
   // Get x and y component of the motion
-  horizontalChange = rawHorizontalChange + (changeOrientation*normalCmPerRadOffset);
-  centerChange = (rightChange + leftChange)/2;        // Creates degrees
-  globalXPos += (centerChange*sin(orientationRads))/factor + (horizontalChange*cos(orientationRads))/factor;// + (changeOrientation*normalCmPerRadOffset/factor*cmPerTick/factor) ; // switch cos and sin for x and y first component
-  globalYPos += (centerChange*cos(orientationRads))/factor - (horizontalChange*sin(orientationRads))/factor;
+  horizontalChange = rawHorizontalChange*cmPerTick + (orientationChange*normalCmPerRadOffset);
+  globalXPos += (centerChange*sin(globalOrientation))/factor + (horizontalChange*cos(globalOrientation))/factor;
+  globalYPos += (centerChange*cos(globalOrientation))/factor - (horizontalChange*sin(globalOrientation))/factor;
 
-//  globalXPos += (centerChange*sin(orientationRads))/factor + (horizontalChange*cos(orientationRads))/factor  ;
-//  globalYPos += (centerChange*cos(orientationRads))/factor - (horizontalChange*sin(orientationRads))/factor  ;
-
-
+  // Print position data to console
   Serial.print("x, y and angle traveled in cm: "); 
   Serial.print(globalXPos); Serial.print(", "); 
   Serial.print(globalYPos); Serial.print(", "); 
-  Serial.print(orientationRads*57.3);
+  Serial.print(globalOrientation*57.3);
+  Serial.println();
 
-/*
-  if (true){
-    Serial.print("angle, raw x: "); 
-    Serial.print(orientationRads*57.3); Serial.print(", "); 
-    tmp1  += (normalEncoder - prevNormalEncoder)*0.2984; 
-    Serial.print(tmp1); Serial.print(", ");    
-    Serial.println();
-    
-   }*/
-   Serial.println();
-
+  // Update variables holding previous values
   prevVerticalLeftEncoder = verticalLeftEncoder;
   prevVerticalRightEncoder = verticalRightEncoder;
   prevNormalEncoder = normalEncoder;
-
 }
 
  

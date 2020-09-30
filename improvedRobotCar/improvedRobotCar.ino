@@ -1,6 +1,7 @@
 
 /*  
-  Made for arduino mega
+  Made for Arduino Mega, but can also be used 
+  with Arduino Due for better performance
 */
 
 void setup(){
