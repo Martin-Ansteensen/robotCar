@@ -6,7 +6,7 @@
 
 void setup(){
 
-  Serial.begin(115200);
+  Serial.begin(9600);
   Serial.println("Robotcar initializing");
   //gyroSetup();
   //motorSetup();
@@ -17,7 +17,6 @@ void setup(){
 }
  
 void loop(){
-  readEncoders();
   processEncoderData();
   //recieveData();
   //calculateFromRadio();
