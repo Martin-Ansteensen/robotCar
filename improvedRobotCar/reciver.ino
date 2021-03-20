@@ -1,15 +1,16 @@
 #include <SPI.h>
 #include <nRF24L01.h>
 #include <RF24.h>
-RF24 radio(8, 53);   // nRF24L01 (CE, CSN)
+RF24 radio(49, 48);   // nRF24L01 (CE, CSN)
 const byte address[6] = "00001";
 unsigned long lastReceiveTime = 0;
 unsigned long currentTime = 0;
-int  driveJoystickX,  driveJoystickY, rotationJoystickX, rotationJoystickY;
-float driveAngel, magnitude;
+double  driveJoystickX,  driveJoystickY, rotationJoystickX, rotationJoystickY;
+double driveAngel, magnitude;
 float pastDesiredAngel = 0;
 
-float desiredAngelScale180, desiredAngelScale360;
+float desiredAngelScale360;
+float desiredAngelScale180 = 0;
 
 // Max size of this struct is 32 bytes - NRF24L01 buffer limit
 struct Data_Package {
@@ -54,10 +55,10 @@ bool recieveData() {
     resetData(); // If connection is lost, reset the data. It prevents unwanted behavior, for example if a drone has a throttle up and we lose connection, it can keep flying unless we reset the values
   }
   // Print the data in the Serial Monitor
-  //  Serial.print("j1PotX: ");
-  //  Serial.print(data.j1PotX);
-  //  Serial.print("; j1PotY: ");
-  //  Serial.println(data.j1PotY);
+//    Serial.print("j1PotX: ");
+//    Serial.print(data.j1PotX);
+//    Serial.print("; j1PotY: ");
+//    Serial.println(data.j1PotY);
 
   //  Serial.print("; j1Button: ");
   //  Serial.println(data.j1Button);
@@ -73,7 +74,7 @@ bool recieveData() {
 void calculateFromRadio() {
   driveJoystickX = map(data.j1PotX, 0, 255, -123, 122);
   driveJoystickY = map(data.j1PotY, 0, 255, -123, 122);
-  driveAngel = atan2(driveJoystickX, driveJoystickY) - (M_PI / 2);
+  driveAngel = -1*atan2(driveJoystickX, driveJoystickY) - (M_PI / 2);
 
 
   //  rotationJoystickX = map(data.j2PotX, 0, 255, -100, 100);
@@ -88,9 +89,9 @@ void calculateFromRadio() {
   if (driveAngel < 0) { // Map the angel from -PI, 0, PI to 0, 2PI
     driveAngel = (driveAngel - 0) * (-1 * M_PI) / (-1 * M_PI) + 2 * M_PI;
   }
-  magnitude = sqrt(driveJoystickX * driveJoystickX + driveJoystickY * driveJoystickY);
+  magnitude = abs(max(abs(driveJoystickX), abs(driveJoystickY)))*2;
 
-
+/*
   Serial.print(" | org x  = "); Serial.print(data.j1PotX);
   Serial.print(" | org y  = "); Serial.print(data.j1PotY);
   Serial.print(" | x  = "); Serial.print(driveJoystickX);
@@ -98,7 +99,8 @@ void calculateFromRadio() {
 
   Serial.print(" | angel  = "); Serial.print(driveAngel * 57.2957);
   Serial.print(" | magnitude  = "); Serial.print(magnitude);
-  Serial.println("");
+  Serial.println("");*/
+
 }
 
 void radioControl() {

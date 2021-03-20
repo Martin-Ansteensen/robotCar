@@ -47,8 +47,8 @@ struct Data_Package {
 };
 Data_Package data; //Create a variable with the above structure
 void setup() {
-//  Serial.begin(9600);
-//  Serial.println("Transmitter running");  
+  Serial.begin(9600);
+  Serial.println("Transmitter running");  
   // Define the radio communication
   radio.begin();
   radio.openWritingPipe(address);
@@ -116,7 +116,7 @@ void loop() {
 
   
   // Print data
-//  Serial.print("L_JOY XY: "); Serial.print(data.j1PotX); Serial.print(" , "); Serial.print(data.j1PotY); Serial.print(" , "); 
+  Serial.print("L_JOY XY: "); Serial.print(data.j1PotX); Serial.print(" , "); Serial.print(data.j1PotY); Serial.print(" , "); 
 //  Serial.print("L_B: "); Serial.print(data.j1Button); Serial.print(" , ");
 //  Serial.print("R_JOY XY:   "); Serial.print(data.j2PotX); Serial.print(" , "); Serial.print(data.j2PotY); Serial.print(" , ");
 //  Serial.print("R_B:   "); Serial.print(data.j2Button); Serial.print(" , ");
@@ -127,7 +127,8 @@ void loop() {
 //  Serial.print("L_POT: "); Serial.print(data.pot1); Serial.print(" , "); 
 //  Serial.print("R_POT: "); Serial.print(data.pot2); Serial.print(" , "); 
 //  Serial.print("SW_FOR: "); Serial.print(data.switch1); Serial.print(" , "); 
-//  Serial.print("SW_BAC: "); Serial.print(data.switch2); Serial.println(); 
+//  Serial.print("SW_BAC: "); Serial.print(data.switch2); 
+  Serial.println(); 
 
   // Send the whole data from the structure to the receiver
   radio.write(&data, sizeof(Data_Package));
