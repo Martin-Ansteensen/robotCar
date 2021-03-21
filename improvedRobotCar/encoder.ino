@@ -1,160 +1,65 @@
 
-#define inputClkVerticalLeftEncoder 32
-#define inputClkVerticalRightEncoder 30
-#define inputClkNormalEncoder 31
+#include <Wire.h>
 
-#define inputDirVerticalLeftEncoder 19
-#define inputDirVerticalRightEncoder 18
-#define inputDirNormalEncoder 2
+# define I2C_LEFT_ENCODER_ADRESS 10
+# define I2C_RIGHT_ENCODER_ADRESS 11
+# define I2C_NORMAL_ENCODER_ADRESS 12
+double left_encoder = 0;
+double right_encoder = 0;
+double normal_encoder = 0;
 
+int right_change = 0;
+int left_change = 0;
+int normal_change = 0;
 
-// The sublists are the encoders in this order: verticalLeft, verticalRight, normal
-// The content of these sublists are: [inputClock, inputDirection, counter, currentClockState, prevClockState]
-int encoderData[][5] = {
-  {inputClkVerticalLeftEncoder, inputDirVerticalLeftEncoder, 0, 0, 0}, 
-  {inputClkVerticalRightEncoder, inputDirVerticalRightEncoder, 0, 0, 0}, 
-  {inputClkNormalEncoder, inputDirNormalEncoder, 0, 0, 0}
-};
 
 void encoderSetup() {
   Serial.println("Encoder initializing");
-  //  Set the encoder pins as inputs
-  pinMode(encoderData[0][0], INPUT);
-  pinMode(encoderData[1][0], INPUT);
-  pinMode(encoderData[2][0], INPUT);
-
-  pinMode(encoderData[0][1], INPUT);
-  pinMode(encoderData[1][1], INPUT);
-  pinMode(encoderData[2][1], INPUT);
-
-  // Read the initial state of the encoder
-  encoderData[0][4] = digitalRead(encoderData[0][0]);
-  encoderData[1][4] = digitalRead(encoderData[1][0]);
-  encoderData[2][4] = digitalRead(encoderData[2][0]);
-  
-  // Attach a interrupt to the dir pin og each encoder
-  attachInterrupt(digitalPinToInterrupt(inputDirVerticalLeftEncoder), readLeftEncoder, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(inputDirVerticalRightEncoder), readRightEncoder, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(inputDirNormalEncoder), readNormalEncoder, CHANGE);
-
-
+  Wire.begin();  
   Serial.println("Encoder setup finished");
 }
 
-void readLeftEncoder(){
-  int i = 0;
-  // Read the current state of the encoder
-  encoderData[i][3] = digitalRead(encoderData[i][0]);
-  
-  // If the previous and the current state of the inputCLK are different then a pulse has occured
-  if (encoderData[i][3] != encoderData[i][4]){
-    
-    // If the direction state is different than the clock state then 
-    // the encoder is rotating counterclockwise
-    if (digitalRead(encoderData[i][1]) != encoderData[i][4]){
-        encoderData[i][2] --;  
-      
-    // The direction state is the same as the clock state
-    // the encoder is rotating clockwise
-    } else {
-        encoderData[i][2] ++;        
-    }
-  }
-  encoderData[i][4] = encoderData[i][3];
-  Serial.print("Left: "); Serial.println(encoderData[0][2]); 
-}
-
-void readRightEncoder(){
-  int i = 1;
-  // Read the current state of the encoder
-  encoderData[i][3] = digitalRead(encoderData[i][0]);
-  
-  // If the previous and the current state of the inputCLK are different then a pulse has occured
-  if (encoderData[i][3] != encoderData[i][4]){
-    
-    // If the direction state is different than the clock state then 
-    // the encoder is rotating counterclockwise
-    if (digitalRead(encoderData[i][1]) != encoderData[i][4]){
-        encoderData[i][2] ++;  //Invert the left encoder
-      
-    // The direction state is the same as the clock state
-    // the encoder is rotating clockwise
-    } else {
-        encoderData[i][2] --;      
-    }
-  }
-  encoderData[i][4] = encoderData[i][3];
-  Serial.print("Right: "); Serial.println(encoderData[1][2]); 
-}
-
-void readNormalEncoder(){
-  int i = 2;
-  // Read the current state of the encoder
-  encoderData[i][3] = digitalRead(encoderData[i][0]);
-  
-  // If the previous and the current state of the inputCLK are different then a pulse has occured
-  if (encoderData[i][3] != encoderData[i][4]){
-    
-    // If the direction state is different than the clock state then 
-    // the encoder is rotating counterclockwise
-    if (digitalRead(encoderData[i][1]) != encoderData[i][4]){
-        encoderData[i][2] --;  
-      
-    // The direction state is the same as the clock state
-    // the encoder is rotating clockwise
-    } else {
-        encoderData[i][2] ++;        
-    }
-  }
-  encoderData[i][4] = encoderData[i][3];
-  Serial.print("Normal: "); Serial.println(encoderData[2][2]); 
-}
-
-
 void readEncoders(){
-/*
-  for (int i = 0; i < 3; i++) {
-    // Read the current state of the encoder
-    encoderData[i][3] = digitalRead(encoderData[i][0]);
-    
-    // If the previous and the current state of the inputCLK are different then a pulse has occured
-    if (encoderData[i][3] != encoderData[i][4]){
-      
-      // If the direction state is different than the clock state then 
-      // the encoder is rotating counterclockwise
-      if (digitalRead(encoderData[i][1]) != encoderData[i][4]){
-
-        if (i == 1){
-          encoderData[i][2] ++;  //Invert the left encoder
-        } else{
-          encoderData[i][2] --;  
-        }
-        
-      // The direction state is the same as the clock state
-      // the encoder is rotating clockwise
-      } else {
-        
-        if (i == 1){
-          encoderData[i][2] --;  
-        } else{
-          encoderData[i][2] ++;  
-        }
-        
-      
-      }
-    }
-    encoderData[i][4] = encoderData[i][3];
+  /*
+  // Left encoder
+  Wire.requestFrom(I2C_LEFT_ENCODER_ADRESS, 4);   
+  left_change = Wire.read(); 
+  Serial.print(F("LEFT : "));
+  if (left_change > 127){
+    left_change = 256 - left_change;
+    left_change *= -1;
   }
-  
-*/
-  Serial.print("Left, right and bottom encoder: "); 
-  Serial.print(encoderData[0][2]); Serial.print(", "); //0.29845130209
-  Serial.print(encoderData[1][2]); Serial.print(", "); 
-  Serial.print(encoderData[2][2]);
-  Serial.println();
+  Serial.print(left_change);  
+  Serial.print(", ");
+  left_encoder = left_encoder + left_change;
+  Serial.println(left_encoder);  
 
+  // Right encoder
+  Wire.requestFrom(I2C_RIGHT_ENCODER_ADRESS, 4);   
+  right_change = Wire.read(); 
+  Serial.print(F("RIGHT : "));
+  if (right_change > 127){
+    right_change = 256 - right_change;
+    right_change *= -1;
+  }
+  Serial.print(right_change);  
+  Serial.print(", ");
+  right_encoder = right_encoder + right_change;
+  Serial.print(right_encoder); */
+
+  // Normal encoder
+  Wire.requestFrom(I2C_NORMAL_ENCODER_ADRESS, 4);   
+  normal_change = Wire.read(); 
+  Serial.print(F("Normal : "));
+  if (normal_change > 127){
+    normal_change = 256 - normal_change;
+    normal_change *= -1;
+  }
+  Serial.print(normal_change);  
+  Serial.print(", ");
+  normal_encoder = normal_encoder + normal_change;
+  Serial.println(normal_encoder);
 }
-// Research why one get strange results with big int*double
 
 
 //
@@ -175,12 +80,9 @@ const double encoderDist = 17.28*factor; // Distance from left- to right encoder
 const double normalCmPerRadOffset = 14.4181646046*factor; // (11.92*2*3.8)/(2*pi)
 
 
-int verticalLeftEncoder;
-int prevVerticalLeftEncoder = 0;
-int verticalRightEncoder;
-int prevVerticalRightEncoder = 0;
-int normalEncoder;
-int prevNormalEncoder = 0;
+int prevleft_encoder = 0;
+int prevright_encoder = 0;
+int prevnormal_encoder = 0;
 
 int leftChange;
 int rightChange;
@@ -194,14 +96,11 @@ double globalXPos;
 double globalYPos;
 
 void processEncoderData(){
-  verticalLeftEncoder = encoderData[0][2]; 
-  verticalRightEncoder = encoderData[1][2];
-  normalEncoder = encoderData[2][2];
 
   // Get current position
-  leftChange = (verticalLeftEncoder - prevVerticalLeftEncoder);
-  rightChange = (verticalRightEncoder - prevVerticalRightEncoder);
-  rawHorizontalChange = (normalEncoder - prevNormalEncoder);
+  leftChange = (left_encoder - prevleft_encoder);
+  rightChange = (right_encoder - prevright_encoder);
+  rawHorizontalChange = (normal_encoder - prevnormal_encoder);
   centerChange = ((rightChange + leftChange)*cmPerTick)/2.0;  // Calculate the average change, accordingly the center change
   
   // Calculate angle
@@ -215,15 +114,15 @@ void processEncoderData(){
 
   // Print position data to console
   Serial.print("x, y and angle traveled in cm: "); 
-  Serial.print(encoderData[0][2]); Serial.print(", "); 
-  Serial.print(encoderData[1][2]); Serial.print(", "); 
-  Serial.print(encoderData[2][2]);
+  Serial.print(globalXPos); Serial.print(", "); 
+  Serial.print(globalYPos); Serial.print(", "); 
+  Serial.print(globalOrientation);
   Serial.println();
 
   // Update variables holding previous values
-  prevVerticalLeftEncoder = verticalLeftEncoder;
-  prevVerticalRightEncoder = verticalRightEncoder;
-  prevNormalEncoder = normalEncoder;
+  prevleft_encoder = left_encoder;
+  prevright_encoder = right_encoder;
+  prevnormal_encoder = normal_encoder;
 }
 
  

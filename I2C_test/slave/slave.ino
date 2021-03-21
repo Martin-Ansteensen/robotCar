@@ -23,7 +23,9 @@ void setup()
 }
 
 void loop(){
-
+  if (encoderChange != 0){
+    Serial.println(encoderChange); 
+  }
 }
 
 void requestEvents()
