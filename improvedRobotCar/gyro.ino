@@ -31,28 +31,32 @@ void gyroSetup() {
 
 // Return rotation (only one angel)
 void getRotation(){
-    mpu.update();
-    gyro_curr = mpu.getAngleZ();
-    robotAngelScale360 += gyro_prev - gyro_curr; // Convert to rad
-    
+   // mpu.update();
+   // gyro_curr = mpu.getAngleZ();
+    //gyro_curr = globalOrientation*57.2957795131;
+    //robotAngelScale360 += gyro_prev - gyro_curr; // Consider Convert to rad
+    robotAngelScale360 = globalOrientation*57.2957795131;
     if (robotAngelScale360 > 360){
       robotAngelScale360 = robotAngelScale360 - 360;
     } else if (robotAngelScale360 < -360){
       robotAngelScale360 = robotAngelScale360 + 360;
     }
     if (robotAngelScale360 > 180){
-      robotAngelScale180 = -180 + (robotAngelScale360 - 180);
+      robotAngelScale180 = robotAngelScale360 - 360);
     } else if (robotAngelScale360 < 180 and robotAngelScale360 > 0 ){
        robotAngelScale180 = robotAngelScale360;
     } else if (robotAngelScale360 < 0 and robotAngelScale360 > -180 ){
       robotAngelScale180 = robotAngelScale360;
     } else if (robotAngelScale360 < -180 ){
-      robotAngelScale180 = 180 + (robotAngelScale360 + 180);
+      robotAngelScale180 = robotAngelScale360 + 360);
     }
+
+    //gyro_prev = gyro_curr;
+    
+    // Old code
     //Serial.println(robotAngelScale180);
     //robotAngelScale180 = robotAngelScale180*(1000/57296);
     //Serial.println(robotAngelScale180*57.2957);
-    gyro_prev = gyro_curr;
 
 }
 

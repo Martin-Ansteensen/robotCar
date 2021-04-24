@@ -1,9 +1,9 @@
-
 #include <Wire.h>
+#include <LiquidCrystal_I2C.h> //Download & include the code library can be downloaded below
 
-# define I2C_LEFT_ENCODER_ADRESS 10
-# define I2C_RIGHT_ENCODER_ADRESS 11
-# define I2C_NORMAL_ENCODER_ADRESS 12
+#define I2C_LEFT_ENCODER_ADRESS 10
+#define I2C_RIGHT_ENCODER_ADRESS 11
+#define I2C_NORMAL_ENCODER_ADRESS 12
 double left_encoder = 0;
 double right_encoder = 0;
 double normal_encoder = 0;
@@ -12,53 +12,55 @@ int right_change = 0;
 int left_change = 0;
 int normal_change = 0;
 
+LiquidCrystal_I2C lcd(0x3F,2,1,0,4,5,6,7,3, POSITIVE); // Initialize LCD Display at address 0x27 
 
 void encoderSetup() {
   Serial.println("Encoder initializing");
   Wire.begin();  
+  lcd.begin(16,2);
+  lcd.setBacklight(HIGH); //Set Back light turn On
   Serial.println("Encoder setup finished");
 }
 
 void readEncoders(){
-  /*
   // Left encoder
   Wire.requestFrom(I2C_LEFT_ENCODER_ADRESS, 4);   
   left_change = Wire.read(); 
-  Serial.print(F("LEFT : "));
   if (left_change > 127){
     left_change = 256 - left_change;
     left_change *= -1;
   }
+  left_encoder = left_encoder + left_change;
+  /*Serial.print(F("Left : "));
   Serial.print(left_change);  
   Serial.print(", ");
-  left_encoder = left_encoder + left_change;
-  Serial.println(left_encoder);  
-
+  Serial.print(left_encoder);*/
+  
   // Right encoder
   Wire.requestFrom(I2C_RIGHT_ENCODER_ADRESS, 4);   
   right_change = Wire.read(); 
-  Serial.print(F("RIGHT : "));
   if (right_change > 127){
     right_change = 256 - right_change;
     right_change *= -1;
   }
+  right_encoder = right_encoder - right_change;
+  /*Serial.print(F(" RIGHT : "));
   Serial.print(right_change);  
   Serial.print(", ");
-  right_encoder = right_encoder + right_change;
-  Serial.print(right_encoder); */
+  Serial.print(right_encoder);*/
 
   // Normal encoder
   Wire.requestFrom(I2C_NORMAL_ENCODER_ADRESS, 4);   
   normal_change = Wire.read(); 
-  Serial.print(F("Normal : "));
   if (normal_change > 127){
     normal_change = 256 - normal_change;
     normal_change *= -1;
   }
+  normal_encoder = normal_encoder - normal_change;
+  /*Serial.print(F(" Normal : "));
   Serial.print(normal_change);  
   Serial.print(", ");
-  normal_encoder = normal_encoder + normal_change;
-  Serial.println(normal_encoder);
+  Serial.println(normal_encoder);*/
 }
 
 
@@ -75,7 +77,7 @@ void readEncoders(){
 // Constants for robot/wheelbase/odomtery configurarion
 
 const double factor = 1000000;
-const double cmPerTick = 0.29845130209*factor; // pi*3.8/40
+const double cmPerTick = 0.59690260418*factor; // pi*3.8/40
 const double encoderDist = 17.28*factor; // Distance from left- to right encoder
 const double normalCmPerRadOffset = 14.4181646046*factor; // (11.92*2*3.8)/(2*pi)
 
@@ -84,16 +86,16 @@ int prevleft_encoder = 0;
 int prevright_encoder = 0;
 int prevnormal_encoder = 0;
 
-int leftChange;
-int rightChange;
-int rawHorizontalChange;
-double orientationChange;
-double horizontalChange;
-double centerChange;
+int leftChange = 0;
+int rightChange = 0;
+int rawHorizontalChange = 0;
+double orientationChange = 0;
+double horizontalChange = 0;
+double centerChange = 0;
 
-double globalOrientation;
-double globalXPos;
-double globalYPos;
+double globalOrientation = 0;
+double globalXPos = 0;
+double globalYPos = 0;
 
 void processEncoderData(){
 
@@ -104,20 +106,35 @@ void processEncoderData(){
   centerChange = ((rightChange + leftChange)*cmPerTick)/2.0;  // Calculate the average change, accordingly the center change
   
   // Calculate angle
-  orientationChange = ((leftChange-rightChange)*cmPerTick)/encoderDist; // lenght of arc = angle/360deg * 2pi*r = angle/2pi * 2pi*r = angle*r
+  orientationChange = ((leftChange-rightChange)*cmPerTick)/encoderDist; // lenght of arc = angle/360deg * 2pi*r = angle/2pi * 2pi*r = angle*r (rad)
   globalOrientation = globalOrientation + orientationChange;
 
   // Get x and y component of the motion
   horizontalChange = rawHorizontalChange*cmPerTick + (orientationChange*normalCmPerRadOffset);
-  globalXPos += (centerChange*sin(globalOrientation))/factor + (horizontalChange*cos(globalOrientation))/factor;
-  globalYPos += (centerChange*cos(globalOrientation))/factor - (horizontalChange*sin(globalOrientation))/factor;
-
+  globalXPos += (centerChange*sin(globalOrientation))/factor + (horizontalChange*cos(globalOrientation))/factor; // added  + orientationChange/2
+  globalYPos += (centerChange*cos(globalOrientation))/factor + (horizontalChange*sin(globalOrientation))/factor; //endret fra - til +. 
+  
   // Print position data to console
-  Serial.print("x, y and angle traveled in cm: "); 
+  /*Serial.print("x, y and angle traveled in cm: "); 
   Serial.print(globalXPos); Serial.print(", "); 
   Serial.print(globalYPos); Serial.print(", "); 
-  Serial.print(globalOrientation);
-  Serial.println();
+  Serial.print(globalOrientation*57.2957795131);
+  Serial.println();*/
+  lcd.setCursor(0,0); // Move cursor to 0
+  lcd.print("x"); 
+  lcd.setCursor(1,0);
+  lcd.print(globalXPos);
+  
+  lcd.setCursor(8,0); // Move cursor to 0
+  lcd.print("y"); 
+  lcd.setCursor(9,0);
+  lcd.print(globalYPos);
+
+  lcd.setCursor(0,1); // Move cursor to 0
+  lcd.print("rot: "); 
+  lcd.setCursor(5,1);
+  lcd.print(globalOrientation*57.2957795131);
+
 
   // Update variables holding previous values
   prevleft_encoder = left_encoder;

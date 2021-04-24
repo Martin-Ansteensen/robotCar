@@ -1,5 +1,5 @@
 #include <Wire.h>
-# define I2C_SLAVE_ADDRESS 12
+#define I2C_SLAVE_ADDRESS 12
 
 static int pinA = 2; // Our first hardware interrupt pin is digital pin 2
 static int pinB = 3; // Our second hardware interrupt pin is digital pin 3
@@ -12,8 +12,10 @@ volatile byte reading = 0; //somewhere to store the direct values we read from o
 void setup()
 {
   Wire.begin(I2C_SLAVE_ADDRESS);
-  Serial.begin(9600); 
-  Serial.println("-------------------------------------I am right encoder Slave, adress 12");             
+  Serial.begin(115200); 
+  Serial.print("-------------------------------------I am normal encoder Slave, adress ");             
+  Serial.println(I2C_SLAVE_ADDRESS);             
+  
   Wire.onRequest(requestEvents);
   pinMode(pinA, INPUT_PULLUP); // set pinA as an input, pulled HIGH to the logic voltage (5V or 3.3V for most cases)
   pinMode(pinB, INPUT_PULLUP); // set pinB as an input, pulled HIGH to the logic voltage (5V or 3.3V for most cases)

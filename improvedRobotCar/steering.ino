@@ -26,7 +26,7 @@
 int calculatedSpeed[4]; // Front left, front right, back left, back right
 float calculatedPID = 0;
 //float Kp = 120 , Ki = 0.05, Kd = 60;
-float Kp = 1 , Ki = 0, Kd = 0.5;
+float Kp = 2 , Ki = 0, Kd = 0.5;
 float total = 0;
 float derivative, previousError, integral, error;
 
@@ -61,7 +61,7 @@ void motorSetup(){
 
 float controllerPID (float previousError){
   getRotation();
-  error = (desiredAngelScale180-robotAngelScale180)*-1;  
+  error = (desiredAngelScale180-robotAngelScale180);  
   integral += error; // (error*runtime); 
   derivative = (error-previousError); // (error-previousError)/runtime;
   total = error*Kp+ integral*Ki + derivative*Kd;
@@ -82,9 +82,8 @@ void calculateSpeed(int mSpeed, float angle, double error){
   calculatedSpeed[3] = (mSpeed*sin(angle+M_PI/4)*sqrt(2)) + error; // Back right
 }
 
-
-void driveMeccanumGyro(float angle, float mSpeed){
-
+// Angle in rad and speed from 0-255
+void driveMeccanumGyro(float angle, float mSpeed){ 
     runPID();
     calculateSpeed(mSpeed, angle, calculatedPID);
 
@@ -108,7 +107,7 @@ void driveMeccanumGyro(float angle, float mSpeed){
     analogWrite(enARight, abs(calculatedSpeed[1])); // Front right
     analogWrite(enALeft, abs(calculatedSpeed[2])); // Back left
     analogWrite(enBRight, abs(calculatedSpeed[3])); // Back right
-
+/*
    Serial.print(" | motor1  = "); Serial.print(calculatedSpeed[0]);
    Serial.print(" | motor2  = "); Serial.print(calculatedSpeed[1]);
    Serial.print(" | motor3  = "); Serial.print(calculatedSpeed[2]);
@@ -117,7 +116,7 @@ void driveMeccanumGyro(float angle, float mSpeed){
    Serial.print(" | robot angel  = "); Serial.print(robotAngelScale180);
    Serial.print(" | error  = "); Serial.print(calculatedPID);
    Serial.println("");  
-
+*/
  }
 
 

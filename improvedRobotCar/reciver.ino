@@ -86,6 +86,7 @@ void calculateFromRadio() {
   //  desiredAngelScale180 = desiredAngelScale180-pastDesiredAngel;
 
   desiredAngelScale180 = 0;
+  
   if (driveAngel < 0) { // Map the angel from -PI, 0, PI to 0, 2PI
     driveAngel = (driveAngel - 0) * (-1 * M_PI) / (-1 * M_PI) + 2 * M_PI;
   }
