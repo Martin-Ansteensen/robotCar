@@ -9,9 +9,9 @@ const unsigned long period = 1000;  //the value is a number of milliseconds
 void setup(){
   Serial.begin(115200);
   Serial.println("Robotcar initializing");
-  recieverSetup();
+//  recieverSetup();
   //gyroSetup();
-  motorSetup();
+//  motorSetup();
   encoderSetup();
   Serial.println("Robotcar finished initializing");
   //startMillis = millis();  //initial start time
@@ -24,9 +24,10 @@ void loop(){
     startMillis = currentMillis;  //IMPORTANT to save the start time of the current LED state.
   }*/
   readEncoders(); 
+
   processEncoderData();   
-  recieveData();
-  calculateFromRadio();
-  radioControl();
+//  recieveData();
+//  calculateFromRadio();
+//  radioControl();
 
 }
