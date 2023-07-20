@@ -42,13 +42,13 @@ void getRotation(){
       robotAngelScale360 = robotAngelScale360 + 360;
     }
     if (robotAngelScale360 > 180){
-      robotAngelScale180 = robotAngelScale360 - 360);
+      robotAngelScale180 = robotAngelScale360 - 360;
     } else if (robotAngelScale360 < 180 and robotAngelScale360 > 0 ){
        robotAngelScale180 = robotAngelScale360;
     } else if (robotAngelScale360 < 0 and robotAngelScale360 > -180 ){
       robotAngelScale180 = robotAngelScale360;
     } else if (robotAngelScale360 < -180 ){
-      robotAngelScale180 = robotAngelScale360 + 360);
+      robotAngelScale180 = robotAngelScale360 + 360;
     }
 
     //gyro_prev = gyro_curr;
