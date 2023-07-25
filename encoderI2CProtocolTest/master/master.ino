@@ -21,10 +21,11 @@ int normal_change = 0;
 
 void setup()
 {
+  Serial.println("Encoder initializing");
   Wire.begin();        
   Serial.begin(115200);  
   Serial.println(F("Master Ardunio Running"));
-  delay(1000);
+  Serial.println("Encoder setup finished");
  
 }
 
