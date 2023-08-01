@@ -17,6 +17,14 @@ The inspiration for this project was taken from the many First Tech Challenge (F
 A meccanum wheel consists of two disks with smaller wheels (rollers) attached in between them. The axis of the rollers are at 45° to the wheel plane and 45° to the axis perpendicular to the disks. A meccanum drivetraing consits of four meccanum wheels, each with it's own DC-motor. By adjusting the speed of each wheel, one can make the drivetrain move in any direction.
 ### Position tracking (used for odometry)
 Three omni wheels (almost like meccanum wheels, but the axis of the rollers are parallel to the wheel plane), each with it's own rotary encoder. To ensure contact with the ground and avoid slipping, the omni wheels were mounted on a small platform with a rubber band forcing them into the ground. By constantly checking the change of the three encoders, the change in the robot's position can be found. 
+
+![bottom_no_wheels](images/bottom_no_wheels.jpg)
+![bottom_with_wheels](images/bottom_with_wheels.jpg)
+
+Demo of the position tracking algorithm. Some error is present, as expected, but it is usable. The error is mainly caused by missed encoder-steps and the encoders low resolution (only 40 steps per revolution), causing accumulative error in the position caclulations.
+
+[![Position tracking demo](https://img.youtube.com/vi/OhbFRzOGtvk/0.jpg)](https://www.youtube.com/watch?v=OhbFRzOGtvk)
+
 ### Electronics
 - Gyro (mpu6050). Experimented with using motion data from the sensor to caculate changes in the position, but the data had to much jitter. Did work to keep track of orientation.
 - Arduino Mega (main brain of car).
@@ -32,14 +40,6 @@ Three omni wheels (almost like meccanum wheels, but the axis of the rollers are 
 - A miscellaneous of common components (wires, capacitors, switches)
 
 ![car_top](images/car_top.jpg)
-
-## Position tracking
-![bottom_no_wheels](images/bottom_no_wheels.jpg)
-![bottom_with_wheels](images/bottom_with_wheels.jpg)
-
-Demo of the position tracking algorithm. Some error is present, as expected, but it is usable. The error is mainly caused by missed encoder-steps and the encoders low resolution (only 40 steps per revolution), causing accumulative error in the position caclulations.
-
-[![Position tracking demo](https://img.youtube.com/vi/OhbFRzOGtvk/0.jpg)](https://www.youtube.com/watch?v=OhbFRzOGtvk)
 
 
 ## Remote control
