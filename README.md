@@ -37,7 +37,7 @@ Demo of the position tracking algorithm. Some error is present, as expected, but
 - LCD (display the position of the robot)
 - Four KY-040 Rotary Encoders
 - nrf24l01 (radio module)
-- A miscellaneous of common components (wires, capacitors, switches)
+- A miscellaneous collection of common components (wires, capacitors, switches)
 
 ![car_top](images/car_top.jpg)
 
