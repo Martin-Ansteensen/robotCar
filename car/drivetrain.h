@@ -1,6 +1,7 @@
 #ifndef _DriveTrain_h
 #define _DriveTrain_h
 #include "motor.h"
+#include "PID.h"
 
 // https://arduino.stackexchange.com/questions/24033/proper-use-of-and-when-passing-objects-in-methods
 
@@ -8,26 +9,17 @@ class DriveTrain {
     private:
         // Pointers to motor-objects
         Motor& frontLeft, frontRight, backLeft, backRight;
-        int motorVelocities[4];
-        float kp, ki, kd;
-        float pidPreviousError;
-        float P, I, D;
-        float correction;
+        double motorVelocities[4];
+        float rot_correction;
+        PID& rotPID;
 
     public:
-        DriveTrain(Motor& _frontLeft, Motor& _frontRight, Motor& _backLeft, Motor& _backRight, float kp, float ki, float kd) 
-        : frontLeft(_frontLeft), frontRight(_frontRight), backLeft(_backLeft), backRight(_backRight) {
-            this->kp = kp;
-            this->ki = ki;
-            this->kd = kd;
+        DriveTrain(Motor& _frontLeft, Motor& _frontRight, Motor& _backLeft, Motor& _backRight, PID& _rotPID) 
+                  : frontLeft(_frontLeft), frontRight(_frontRight), backLeft(_backLeft), backRight(_backRight), rotPID(_rotPID) {
             init();
         }
 
         void init(){
-            pidPreviousError = 0;
-            P = 0;
-            I = 0;
-            D = 0;
         }
 
         void caculateVelocities(int motorSpeed, float angle){
@@ -45,13 +37,6 @@ class DriveTrain {
             backRight.drive(motorVelocities[3]);
         }
 
-        float calculatePIDcorrection(float error){
-            P = error*kp;
-            I = (I + error)*ki;
-            D = (error - pidPreviousError)*kd;
-            pidPreviousError = error;
-            return P + I + D;
-        }
 
         void scaleVelocities(){
             // Scales velocities so that none of them exceeds
@@ -67,21 +52,19 @@ class DriveTrain {
             for (int i=0; i<4; i++){
                 motorVelocities[i] *= 255.0/largest;
             }
-
         }
 
         void driveWithPID(int motorSpeed, float angle, float error){
-            correction = calculatePIDcorrection(error);
+            rot_correction = rotPID.calculateCorrection(error);
             caculateVelocities(motorSpeed, angle);
-            
             // Add error adjustment to velocities
-            motorVelocities[0] += correction;
-            motorVelocities[1] -= correction;
-            motorVelocities[2] += correction;
-            motorVelocities[3] -= correction;
-            // The correction can have made the velocities exceed
-            // their limits
+            motorVelocities[0] += rot_correction;
+            motorVelocities[1] -= rot_correction;
+            motorVelocities[2] += rot_correction;
+            motorVelocities[3] -= rot_correction;
+
             scaleVelocities();
+
             // Set motor velocities
             frontLeft.drive(motorVelocities[0]);
             frontRight.drive(motorVelocities[1]);
@@ -97,7 +80,7 @@ class DriveTrain {
         }
 
         float getCorrection(){
-          return correction;
+          return rot_correction;
         }
 };
 #endif

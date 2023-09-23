@@ -12,6 +12,7 @@
 #include "motor.h"
 #include "drivetrain.h"
 #include "reciever.h"
+#include "PID.h"
 
 //  Connections from L298N to Arduino Mega
 
@@ -52,7 +53,7 @@ int mspeed = 125;
 double inspeed, inangle;
 
 
-LiquidCrystal_I2C lcd(0x3F, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); // Initialize LCD Display at address 0x27
+LiquidCrystal_I2C lcd(0x3F, 16, 2); // Initialize LCD Display at address 0x27
 
 EncoderUnit leftEncoder(I2C_LEFT_ENCODER_ADRESS);
 EncoderUnit rightEncoder(I2C_RIGHT_ENCODER_ADRESS, -1);
@@ -61,12 +62,15 @@ EncoderUnit normalEncoder(I2C_NORMAL_ENCODER_ADRESS);
 MPU6050 mpu(Wire);
 Navigation navigate(mpu);
 
-Motor frontLeftMotor(enBLeft, in3Left, in4Left, true, 0);
-Motor frontRightMotor(enARight, in1Right, in2Right, false, 0);
-Motor backLeftMotor(enALeft, in1Left, in2Left, false, 7);
-Motor backRightMotor(enBRight, in3Right, in4Right, true, 15);
+int MIN_VELOCITY = 35;
+Motor frontLeftMotor(enBLeft, in3Left, in4Left, true, 0, MIN_VELOCITY);
+Motor frontRightMotor(enARight, in1Right, in2Right, false, 0, MIN_VELOCITY);
+Motor backLeftMotor(enALeft, in1Left, in2Left, false, 7, MIN_VELOCITY);
+Motor backRightMotor(enBRight, in3Right, in4Right, true, 15, MIN_VELOCITY);
 
-DriveTrain driveTrain(frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor, 50, 0.40, 30);
+// TODO: TUNE PID-CONTROLLER
+PID rotPID(150, 0.02, 500);
+DriveTrain driveTrain(frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor, rotPID);
 
 RF24 radio(49, 48);  // nRF24L01 (CE, CSN)
 Reciever reciever(radio);
@@ -76,8 +80,8 @@ void setup() {
   Serial.begin(9600);
   Serial.println("Robotcar initializing");
 
-  lcd.begin(16, 2);
-  lcd.setBacklight(HIGH); //Set Back light turn On
+  lcd.init();
+  lcd.backlight(); // Turn on backlight
 
   leftEncoder.init();
   rightEncoder.init();
@@ -96,11 +100,13 @@ void displayPosition(double x, double y, double rotation) {
   lcd.print("x");
   lcd.setCursor(1, 0);
   lcd.print(x);
+
   // Top middel screen
   lcd.setCursor(8, 0);
   lcd.print("y");
   lcd.setCursor(9, 0);
   lcd.print(y);
+
   // Bottom left corner
   lcd.setCursor(0, 1);
   lcd.print("rot: ");
@@ -109,19 +115,6 @@ void displayPosition(double x, double y, double rotation) {
 }
 
 void loop() {
-  if (n < 60) {
-    mspeed = 80;
-//    Serial.println("forward");
-  }
-
-  else {
-    mspeed = -80;
-//    Serial.println("backward");
-  }
-  if (n > 120) {
-    n = 0;
-  }
-  n++;
 
   leftEncoder.requestEncoderData();
   rightEncoder.requestEncoderData();
@@ -130,6 +123,8 @@ void loop() {
   leftChange = leftEncoder.getEncoderChange();
   rightChange = rightEncoder.getEncoderChange();
   normalChange = normalEncoder.getEncoderChange();
+
+  // Serial.print(leftChange);Serial.print(", ");Serial.print(rightChange);Serial.print(", ");Serial.println(normalChange);
 
   reciever.recieveData();
   reciever.processData();

@@ -7,6 +7,7 @@ class Motor {
         bool reverseDir;
         int extraSpeed;
         float adjustedVelocity;
+        int minVelocity;
     
         void forward(){
             if (reverseDir) {
@@ -29,12 +30,13 @@ class Motor {
         }
 
     public:
-        Motor(int enable, int in1, int in2, bool reverseDir, int extraSpeed){
+        Motor(int enable, int in1, int in2, bool reverseDir, int extraSpeed, int minVelocity){
             this->enable = enable;
             this->in1 = in1;
             this->in2 = in2;
             this->reverseDir = reverseDir;
             this->extraSpeed = extraSpeed;
+            this->minVelocity = minVelocity;
             init();
         }
         
@@ -59,9 +61,9 @@ class Motor {
             
             // Set motor speed
             if (velocity > 0){
-              adjustedVelocity = velocity + extraSpeed;
+              adjustedVelocity = velocity + extraSpeed + minVelocity;
             } else if (velocity < 0){
-              adjustedVelocity = velocity - extraSpeed;
+              adjustedVelocity = velocity - extraSpeed - minVelocity;
             } else {
               adjustedVelocity = 0;
             }
